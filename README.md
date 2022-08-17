@@ -4,16 +4,16 @@ Proyecto 1 - Redes: Cliente de un chat XMPP
 
 ## 🛠 Installation requirements
 
-> Python 3.7.3
+> Python 3.10
 
 ```shell
-py -3.7 -m pip install slixmpp
-py -3.7 -m pip install xmpppy
+py -3.10 -m pip install slixmpp
+py -3.10 -m pip install xmpppy
 ```
 
 ## 💻 How to use it
 ```shell
-py -3.7 main.py
+py -3.10 main.py
 ```
 
 ## 📋 Features
