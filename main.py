@@ -1,3 +1,6 @@
+# Referencias:
+# https://slixmpp.readthedocs.io/en/latest/
+
 # Proyecto 1 Redes
 # Javier Hernández
 # Carnet 19202
