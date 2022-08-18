@@ -1,198 +1,58 @@
 # Referencias:
 # https://slixmpp.readthedocs.io/en/latest/
+# https://xmpp.readthedocs.io/en/latest/
 
 # Proyecto 1 Redes
 # Javier Hernández
 # Carnet 19202
 
+import subprocess
 from getpass import getpass
-from argparse import ArgumentParser
+import xmpp
 
-# Importar clientes utiles
-from mensaje import Client
-from registro import registro, Eliminar
-from roster import Rosters, AddRoster
-from group import ChatGroup
-from file import File
+# Create user function
+def createUser():
+    print(' ')
+    print('Crear un usuario: ')
+    new_user = input('username@alumchat.fun:  ')
+    new_password = getpass('password:  ')
+    user = new_user
+    password = new_password
+    jid = xmpp.JID(user)
+    print(jid)
+    cli = xmpp.Client(jid.getDomain(), debug=[])
+    cli.connect()
+    if xmpp.features.register(cli, jid.getDomain(), {'username': jid.getNode(), 'password': password}):
 
-if __name__ == '__main__':
-    parser = ArgumentParser(description=Client.__doc__)
+        return True
+    else:
+        return False
 
-    parser.add_argument("-j", "--jid", dest="jid",
-                        help="JID to use")
-    parser.add_argument("-p", "--password", dest="password",
-                        help="password to use")
 
-    parser.add_argument("-s", "--show", dest="show",
-                        help="show to use")
-    parser.add_argument("-t", "--status", dest="status",
-                        help="status to use")
-    parser.add_argument("-r", "--register", dest="register",
-                        help="Is new user")
+cmd = 'python servidor.py -d -j'
 
-    args = parser.parse_args()
-
-    posible_status = {
-        "1": "chat",
-        "2": "away",
-        "3": "dnd",
-        "4": "xa",
-    }
-
+menu = True
+while menu is True:
+    
     print("""
     *************************************************
     Hola, Bienvenido a ALUMCHAT.FUN
-    1. ¿Deseas crear una cuenta?
-    2. ¿Deseas ingresar a tu cuenta?
     *************************************************
     """)
-    opcion = input("Escribe aca la opcion que deseas: ")
 
-    if opcion == "1" or opcion == "2":
-        if args.jid is None:
-            args.jid = input("Ingrese su nombre de usuario: ")
-        if args.password is None:
-            args.password = getpass("Ingrese su contraseña: ")
-        args.show = "1"
-        args.status = ""
+    op = input('Que desea hacer:\n1.Iniciar sesion\n2.Registrarse\n3.Salir\n>>> ')
 
-    if opcion == "1":
-        if registro(args.jid, args.password):
-            print("Cuenta creada con éxito, ya puedes ingresar a tu nueva cuenta de ALUMCHAT.FUN \n")
-            opcion = input("¿Deseas iniciar sesion? y/n: ")
-        else:
-            print("Un error inesperado ha ocurrido")
+    if op == '1':
+        user = input('Ingrese su usuario (user@alumchat.fun)\n>>>')
+        p = '-p'
+        password = getpass('Clave:\n>>> ')
+        res = cmd+' '+user+' '+p+' '+password
 
-    if opcion == "2" or opcion.lower() == "y":
-        corriendo = True
-        while corriendo:
-            print("""
-            *************************************************
-                            ALUMCHAT.FUN               
-            *************************************************
-            0. Mensaje privada
-            1. Mensaje de presencia
-            2. Chat grupal
-            3. Modificar mi estado
-            4. Mis contactos
-            5. Añadir contacto
-            6. Mostrar perfil de un contacto
-            7. Enviar archivos
-            8. Ponerme al dia
-            9. Salir
-            10. Borrar mi cuenta // CUIDADO //
-            *************************************************
-            """)
-            opcion = input("Ingresa el ## de accion que deseas realizar: ") 
-            if(opcion == "0"):
-                recipient = input("¿A quien le quieres escribir hoy? ") 
-                message = input("Mensaje... ")
-                xmpp = Client(args.jid, args.password, recipient, message, posible_status[args.show], args.status)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(forever=False)
-            if(opcion == "1"):
-                m_presencia = input("¿Que mensaje le quieres enviar a tus amig@s? ")
-                xmpp = Rosters(args.jid, args.password, posible_status[args.show], args.status, show=False, message=m_presencia)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(forever=False)
-            if(opcion == "2"):
-                room = input("¿Cual es el nombre del grupo? ") 
-                nick_name = input("¿Cual sobrenombre quieres para tu grupo? ")
-                if '@conference.alumchat.xyz' in room:
-                    xmpp = ChatGroup(args.jid, args.password, room, nick_name)
-                    xmpp.register_plugin('xep_0030') # Service Discovery
-                    xmpp.register_plugin('xep_0199') # XMPP Ping
-                    xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                    xmpp.register_plugin('xep_0096') # Jabber Search
-                    xmpp.register_plugin('xep_0085') # Chat State Notifications
-                    xmpp.connect()
-                    xmpp.process(forever=False)
-            if(opcion == "3"):
-                print("""
-                1. Disponible
-                2. No disponible
-                3. No molestar
-                4. Ausente
-                """)
-                args.show = input("¿En que estado te encuentras? ")
-                stat = input("¿Deseas ingresar un estado personalizado? y/n: ")
-                if stat.lower() == "y":
-                    args.status = input("SUGERENCIA: Utiliza una frase divertida. \nEscribe aqui tu frase... ")
-                xmpp = AddRoster(args.jid, args.password, posible_status[args.show], args.status)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(forever=False)
-            if(opcion == "4"):
-                xmpp = Rosters(args.jid, args.password, posible_status[args.show], args.status)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(forever=False)
-            if(opcion == "5"):
-                contact = input("¿Quien quieres que sea tu amig@? ") 
-                xmpp = AddRoster(args.jid, args.password, posible_status[args.show], args.status, contact)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(forever=False)
-            if(opcion == "6"):
-                contact = input("¿A quien quieres stalkear hoy? ") 
-                xmpp = Rosters(args.jid, args.password, posible_status[args.show], args.status, contact)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(forever=False)
-            if (opcion == "7"):
-                recipient = input("¿A quien le quieres escribir hoy? ") 
-                xmpp = File(args.jid, args.password, posible_status[args.show], args.status, True, recipient)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(forever=False)
-            if (opcion == "8"):
-                xmpp = File(args.jid, args.password, posible_status[args.show], args.status)
-                xmpp.register_plugin('xep_0030') # Service Discovery
-                xmpp.register_plugin('xep_0199') # XMPP Ping
-                xmpp.register_plugin('xep_0045') # Mulit-User Chat (MUC)
-                xmpp.register_plugin('xep_0096') # Jabber Search
-                xmpp.register_plugin('xep_0085') # Chat State Notifications
-                xmpp.connect()
-                xmpp.process(timeout=25)
-                xmpp.disconnect()
-            if(opcion == "9"):
-                corriendo = False
-                print('\n ¡Hasta la proxima! \n')
-            if(opcion == "10"):
-                xmpp = Eliminar(args.jid, args.password, posible_status[args.show], args.status)
-                xmpp.connect()
-                xmpp.process(forever=False)
-                xmpp = None
-                corriendo = False
+        list_files = subprocess.run(res)
+    elif op == '2':
+        print('Registro')
+        createUser()
 
-            
+    else:
+        print('Gracias por usar el chat\n')
+        menu = False
